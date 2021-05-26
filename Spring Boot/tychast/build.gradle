@@ -1,0 +1,57 @@
+plugins {
+	id 'org.springframework.boot' version '1.5.10.RELEASE'
+	id 'java'
+}
+
+group = 'ru.mirea.tychast'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation  ('org.springframework.boot:spring-boot-starter-web',
+			'org.springframework.boot:spring-boot-starter',
+			'org.springframework.boot:spring-boot-starter-thymeleaf')
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'ru.mirea.tychast.TychastApplication'
+	}
+	enabled=true
+	from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+task copyJarToBin(type: Copy) {
+	from 'build/libs/tychast-0.0.1-SNAPSHOT.jar'
+	into "C:/Users/DonJuan/data"
+}
+
+task compImg(type: Exec) {
+	workingDir 'C:\\Users\\DonJuan'
+	commandLine "docker", "build", "-t", "imge", "."
+}
+
+task runImg(type: Exec) {
+	workingDir 'C:\\Users\\DonJuan'
+	commandLine "docker", "run", "-p8081:8080", "--rm", "imge", "/usr/bin/java", "-jar", "/mnt/files/tychast-0.0.1-SNAPSHOT.jar"
+}
+
+task runnn {
+	dependsOn(jar)
+	dependsOn(bootRepackage)
+	dependsOn(copyJarToBin)
+	dependsOn(compImg)
+	dependsOn(runImg)
+	copyJarToBin.mustRunAfter(bootRepackage)
+	compImg.mustRunAfter(copyJarToBin)
+	runImg.mustRunAfter(compImg)
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    source = sourceSets.main.allJava
+}
